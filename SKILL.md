@@ -1,0 +1,13 @@
+---
+name: proofrivet-factory-pilot
+description: Guides an authorized factory contact through drafting and submitting a one-product ProofRivet pilot application. Use when a factory asks to apply to ProofRivet or to check what information is missing before submitting.
+---
+
+# ProofRivet 工厂试点申请
+
+1. 用申请人的语言交谈。读取 [申请字段](references/application.md)，复用申请人提供的信息，集中询问仍缺的字段。产品型号、规格、用途是三个独立字段。授权依据或资料准备情况暂不清楚时，按实际情况写「待核实」。
+2. 把完整拟提交摘要给申请人看，包括申请企业、联系人和企业邮箱、职务和授权依据、产品信息以及材料清单。说明摘要将进入 ProofRivet 的人工审核后台。请申请人确认自己有权代表企业、同意提交这份摘要。对方补充或修改字段时，请重新展示摘要。
+3. 收到明确确认后，再执行提交。为这份已确认的申请生成一个 UUID v4 作为 `requestId`，并设置 `applicantConfirmed` 为 JSON 布尔值 `true`。通过标准输入将 JSON 交给 [提交脚本](scripts/submit.py)。客户端需要从文件提供标准输入时，使用仅申请人可读的临时文件，提交后清理。申请内容请留在私密渠道，切勿写入共享目录、日志或终端命令参数。
+4. 只有服务端返回有效受理编号才报告“申请请求已收件”，把实际编号告诉申请人。人工审核和邀请另行进行。遇到超时、连接中断或结果无法核实，说明提交结果待确认。确需重试时，在申请人确认后复用原请求 ID 和原内容。
+
+脚本只发送申请字段。报告原件、交易凭证、买方身份及价格请留在企业内部，后续按授权通过私密渠道提供。技能只负责试点申请。若客户端无法运行提交工具，先交付摘要，并给出 [ProofRivet 手动申请表](https://factory.proofrivet.com/apply) 供申请人继续提交。
