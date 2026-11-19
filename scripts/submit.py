@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Send a confirmed ProofRivet factory pilot application from standard input."""
+"""Send a confirmed ProofRivet factory onboarding application from standard input."""
 
 import argparse
 import http.client
