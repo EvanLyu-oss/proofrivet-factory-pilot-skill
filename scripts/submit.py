@@ -16,6 +16,7 @@ MAX_REQUEST_BYTES = 16_384
 MAX_RECEIPT_BYTES = 4_096
 TEXT_LIMITS = {
     "companyName": 200,
+    "registrationId": 80,
     "contactName": 100,
     "email": 254,
     "contactTitle": 100,
@@ -26,6 +27,7 @@ TEXT_LIMITS = {
     "productUse": 300,
     "materialSummary": 500,
 }
+FIELDS_ALLOWING_PENDING = {"authorizationBasis", "materialSummary"}
 
 
 class NoRedirects(urllib.request.HTTPRedirectHandler):
@@ -72,12 +74,15 @@ def read_application():
         value = data[name]
         if not isinstance(value, str):
             raise ValueError(f"申请字段缺失或格式不正确（{name}）。")
+        normalized = value.strip()
         try:
-            length = len(value.strip().encode("utf-16-le")) // 2
+            length = len(normalized.encode("utf-16-le")) // 2
         except UnicodeEncodeError:
             raise ValueError("申请包含无效的 Unicode 文本。")
         if length == 0 or length > limit:
             raise ValueError(f"申请字段应包含 1 到 {limit} 个字符（{name}）。")
+        if normalized == "待核实" and name not in FIELDS_ALLOWING_PENDING:
+            raise ValueError(f"请填写实际资料（{name}）。")
     payload = json.dumps(data, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     if len(payload) > MAX_REQUEST_BYTES:
         raise ValueError("申请内容超过字节上限。")
