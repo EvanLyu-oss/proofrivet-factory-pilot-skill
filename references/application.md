@@ -1,6 +1,6 @@
-# 申请字段与回执
+# 工厂入驻申请字段与回执
 
-申请面向一个企业的一款产品。所有文本字段都应使用申请人提供的信息。暂时没有授权依据或材料说明时，使用「待核实」，保留给工作人员确认。
+每份入驻申请包含一个企业和一款拟核验产品。所有文本字段都应使用申请人提供的信息。暂时没有授权依据或材料说明时，使用「待核实」，保留给工作人员确认。
 
 | 字段 | 填写内容 | 文本长度上限 |
 | --- | --- | ---: |
@@ -9,7 +9,7 @@
 | `email` | 经办联系人使用的企业邮箱 | 254 |
 | `contactTitle` | 联系人职务 | 100 |
 | `authorizationBasis` | 代表企业申请及处理本次材料的依据 | 500 |
-| `productName` | 一款拟试点产品的名称 | 200 |
+| `productName` | 拟核验产品名称 | 200 |
 | `productModel` | 产品完整型号 | 100 |
 | `productSpecification` | 产品的主要规格 | 300 |
 | `productUse` | 产品主要用途 | 300 |
@@ -23,10 +23,10 @@
 {
   "requestId": "6d032c28-1b2c-4d52-8743-d408713aa99d",
   "applicantConfirmed": true,
-  "companyName": "DEMO 合成试点组",
+  "companyName": "DEMO 合成入驻申请企业",
   "contactName": "合成联系人",
   "email": "factory@example.invalid",
-  "contactTitle": "试点经办人",
+  "contactTitle": "入驻经办人",
   "authorizationBasis": "合成流程中的授权说明，待核实",
   "productName": "合成装配夹具",
   "productModel": "DEMO-JIG-01",
