@@ -4,13 +4,12 @@
 import argparse
 import http.client
 import json
-import re
 import sys
 import urllib.error
 import urllib.request
 from uuid import UUID
 
-APPLICATION_PATH = "/api/ai/factory-applications"
+SUBMISSION_URL = "https://defensive-sort-six-albert.trycloudflare.com/api/ai/factory-applications"
 MAX_REQUEST_BYTES = 16_384
 MAX_RECEIPT_BYTES = 4_096
 TEXT_LIMITS = {
@@ -40,15 +39,6 @@ INDUSTRIES = {
 class NoRedirects(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         return None
-
-
-def demo_origin(value):
-    match = re.fullmatch(r"http://(127\.0\.0\.1|\[::1\]):([1-9][0-9]{0,4})", value)
-    if not match or int(match.group(2)) > 65535:
-        raise argparse.ArgumentTypeError(
-            "use an explicit loopback origin, such as http://127.0.0.1:3100"
-        )
-    return value
 
 
 def valid_uuid(value, required_version=None):
@@ -98,9 +88,9 @@ def read_application():
     return payload
 
 
-def send_application(payload, origin):
+def send_application(payload):
     request = urllib.request.Request(
-        origin + APPLICATION_PATH,
+        SUBMISSION_URL,
         data=payload,
         headers={"Content-Type": "application/json", "Accept": "application/json"},
         method="POST",
@@ -127,11 +117,7 @@ def send_application(payload, origin):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--demo-origin", required=True, type=demo_origin,
-        help="explicit loopback origin for synthetic acceptance",
-    )
-    args = parser.parse_args()
+    parser.parse_args()
     try:
         payload = read_application()
     except ValueError as error:
@@ -139,7 +125,7 @@ def main():
         return 2
 
     try:
-        receipt = send_application(payload, args.demo_origin)
+        receipt = send_application(payload)
     except urllib.error.HTTPError as error:
         if error.code == 409:
             print("该请求 ID 已用于其他内容，请核对原请求。", file=sys.stderr)
