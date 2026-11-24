@@ -1,19 +1,22 @@
 # 企业入驻申请字段与回执
 
-每份申请对应一家企业，表中字段均为必填。验收使用用户确认的合成资料，登记号、联系人和邮箱均使用合成值。授权依据暂未核对时，可填写「待核实」，由审核人员复核。主营业务填写具体经营活动。报告、产品名、型号、规格和用途在企业进入工作台后按需添加。
+预览只接收合成资料。企业名称以 `DEMO` 开头，企业登记号以 `DEMO-` 开头，联系人邮箱以 `.invalid` 结尾。每份申请对应一家企业。证据原件和产品资料在企业进入工作台后按需处理。
 
-| 字段 | 填写内容 | 文本长度上限 |
+| 字段 | 填写内容 | UTF-16 长度上限 |
 | --- | --- | ---: |
 | `companyName` | 企业登记全称 | 200 |
-| `registrationId` | 统一社会信用代码或企业登记号。境外企业可填当地登记号 | 80 |
+| `registrationId` | 统一社会信用代码或企业登记号 | 80 |
 | `contactName` | 经办联系人姓名 | 100 |
 | `email` | 经办联系人使用的企业邮箱 | 254 |
 | `contactTitle` | 联系人职务 | 100 |
-| `authorizationBasis` | 代表企业申请及处理本次材料的依据 | 500 |
-| `industry` | 从主营行业选项中选一项，提交对应代码 | |
-| `businessSummary` | 用一句话说明主营业务，例如「生产销售工程塑料」 | 500 |
+| `authorizationBasis` | 代表企业申请的依据，尚待审核时可填「待核实」 | 500 |
+| `industry` | 主营行业代码 | |
+| `businessSummary` | 一句话说明主营业务 | 500 |
+| `websiteUrl` | **选填**，企业官网或独立站的公开 HTTPS 地址 | 2048 |
 | `requestId` | 申请人确认后生成的 UUID v4，同一份申请重试时复用 | |
 | `applicantConfirmed` | 申请人明确同意后填写 JSON 布尔值 `true` | |
+
+网址可含页面路径。请使用公开域名，省略登录凭据、查询参数、片段以及非默认端口。留空时省略整个 `websiteUrl` 字段。提交网址仅供审核，网站公开由企业在工作台确认。
 
 ## 主营行业
 
@@ -31,7 +34,9 @@
 | 金属与五金 | `METAL_HARDWARE` |
 | 其他 | `OTHER` |
 
-## 合成申请示例
+## 合成示例
+
+给每次新申请生成请求 ID。测试留空时，从示例删除 `websiteUrl` 一行。
 
 ```json
 {
@@ -44,16 +49,15 @@
   "contactTitle": "入驻经办人",
   "authorizationBasis": "合成流程中的授权说明，待核实",
   "industry": "CHEMICALS_MATERIALS",
+  "websiteUrl": "https://example.com/demo-website-profile",
   "businessSummary": "生产销售工程塑料（合成验收资料）"
 }
 ```
 
-## 提交和回执
+## 提交与回执
 
-客户端运行 `python3 scripts/submit.py`，将合成申请的 UTF-8 JSON **通过标准输入**交给脚本。
+运行 `python3 scripts/submit.py`，通过标准输入提供已经确认的 UTF-8 JSON。脚本仅向固定的独立验收站地址 `https://passengers-bridge-hosts-relate.trycloudflare.com/api/ai/factory-applications` 提交请求，禁用代理和重定向。
 
-脚本只向固定地址 `https://defensive-sort-six-albert.trycloudflare.com/api/ai/factory-applications` 发出 HTTPS POST，禁用地址覆盖和跳转。脚本仅接受 HTTP 201 和 `{"received":true,"receiptId":"<uuid>"}` 回执。回执代表收到申请请求，资质和联系人授权由审核人员核对。已有进行中的申请或账号时，后台对新请求去重，仅记录本次收件。
+HTTP 201 及 `{"received":true,"receiptId":"<uuid>"}` 表明请求已收件。以实际返回的受理编号为准。网站和企业资料仍需人工审核。
 
-网络中断后，先说明结果待确认。申请人同意重试时，复用原请求 ID 和完整内容。收到 HTTP 429 时等待至少一分钟，再按同样方式重试。HTTP 409 表示请求 ID 已用于其他内容。修改已确认内容时，重新展示摘要、取得明确同意，并为新请求生成新 ID。
-
-如验收站暂时不可用，等待该站恢复并按上述重试规则处理。
+超时、连接中断或未能核实回执时，将结果告知申请人，待其确认后用原请求 ID 和原内容重试。收到 HTTP 429 时至少等待一分钟。HTTP 409 表示原请求 ID 对应其他内容。修改内容后需重新确认并生成新请求 ID。

@@ -1,17 +1,25 @@
 #!/usr/bin/env python3
-"""Send a confirmed ProofRivet company application to the isolated preview."""
+"""Send a confirmed synthetic company application to the isolated ProofRivet preview."""
 
 import argparse
 import http.client
 import json
+import re
 import sys
+import unicodedata
 import urllib.error
+import urllib.parse
 import urllib.request
 from uuid import UUID
 
-SUBMISSION_URL = "https://defensive-sort-six-albert.trycloudflare.com/api/ai/factory-applications"
+SUBMISSION_URL = "https://passengers-bridge-hosts-relate.trycloudflare.com/api/ai/factory-applications"
 MAX_REQUEST_BYTES = 16_384
 MAX_RECEIPT_BYTES = 4_096
+WEBSITE_LIMIT = 2048
+DOMAIN_LABEL = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?")
+PRIVATE_DOMAIN_SUFFIXES = (
+    "localhost", "local", "internal", "test", "invalid", "example", "onion", "home.arpa", "lan",
+)
 TEXT_LIMITS = {
     "companyName": 200,
     "registrationId": 80,
@@ -51,6 +59,36 @@ def valid_uuid(value, required_version=None):
         return False
 
 
+def validate_website_url(value):
+    invalid = ValueError("企业官网或独立站须为有效的公开 HTTPS 网址（websiteUrl）。")
+    if not isinstance(value, str):
+        raise invalid
+    normalized = value.strip()
+    try:
+        if not normalized.lower().startswith("https://") or len(normalized.encode("utf-16-le")) // 2 > WEBSITE_LIMIT:
+            raise invalid
+        if any(char.isspace() or unicodedata.category(char) in ("Cc", "Cf") for char in normalized):
+            raise invalid
+        if any(char in normalized for char in "\\?#"):
+            raise invalid
+        parsed = urllib.parse.urlsplit(normalized)
+        if parsed.username is not None or parsed.password is not None or parsed.port not in (None, 443):
+            raise invalid
+        hostname = (parsed.hostname or "").encode("idna").decode("ascii").lower()
+    except (UnicodeError, ValueError):
+        raise invalid from None
+
+    labels = hostname.split(".")
+    if (
+        len(hostname) > 253
+        or len(labels) < 2
+        or any(DOMAIN_LABEL.fullmatch(label) is None for label in labels)
+        or re.fullmatch(r"[a-z]+|xn--[a-z0-9-]+", labels[-1]) is None
+        or any(hostname == suffix or hostname.endswith("." + suffix) for suffix in PRIVATE_DOMAIN_SUFFIXES)
+    ):
+        raise invalid
+
+
 def read_application():
     raw = sys.stdin.buffer.read(MAX_REQUEST_BYTES + 1)
     if len(raw) > MAX_REQUEST_BYTES:
@@ -61,7 +99,8 @@ def read_application():
         raise ValueError("需要通过标准输入提供 UTF-8 JSON。") from None
     if not isinstance(data, dict):
         raise ValueError("申请应为 JSON 对象。")
-    if data.keys() != TEXT_LIMITS.keys() | {"industry", "requestId", "applicantConfirmed"}:
+    required_fields = TEXT_LIMITS.keys() | {"industry", "requestId", "applicantConfirmed"}
+    if not required_fields <= data.keys() <= required_fields | {"websiteUrl"}:
         raise ValueError("申请字段应与申请字段表一致。")
     if data["applicantConfirmed"] is not True:
         raise ValueError("请先取得申请人对这份申请的明确确认。")
@@ -82,6 +121,14 @@ def read_application():
             raise ValueError(f"申请字段应包含 1 到 {limit} 个字符（{name}）。")
         if normalized == "待核实" and name != "authorizationBasis":
             raise ValueError(f"请填写实际资料（{name}）。")
+    if (
+        not data["companyName"].strip().startswith("DEMO")
+        or not data["registrationId"].strip().startswith("DEMO-")
+        or not data["email"].strip().lower().endswith(".invalid")
+    ):
+        raise ValueError("预览仅接收合成资料。请使用 DEMO 企业名称、DEMO- 登记号和 .invalid 邮箱。")
+    if "websiteUrl" in data:
+        validate_website_url(data["websiteUrl"])
     payload = json.dumps(data, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     if len(payload) > MAX_REQUEST_BYTES:
         raise ValueError("申请内容超过字节上限。")

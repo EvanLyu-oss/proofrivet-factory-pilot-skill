@@ -1,21 +1,9 @@
-# ProofRivet 企业入驻技能 · 验收预览
+# ProofRivet 企业入驻技能预览版
 
-用一段对话准备合成企业入驻申请。资料包括企业登记全称、统一社会信用代码或当地企业登记号、主营行业、主营业务，以及经办联系人和授权说明。AI 会展示申请摘要，经您确认后再提交审核。激活账号后，可在工作台添加具体产品。
+版本 `v0.3.0-rc.2` 用于独立公网验收。可用合成申请验证企业官网或独立站的选填字段。企业也可以激活账号后在工作台补填网址。审核员核对后，由企业授权公开。
 
-此版本使用合成资料进行验收。提交工具仅连接[企业入驻验收站](https://defensive-sort-six-albert.trycloudflare.com/apply)。
+## 交给 AI
 
-## 给自己的 AI
+> 请读取 [ProofRivet 企业入驻预览技能](SKILL.md)，用合成资料准备入驻申请。如果我提供企业官网或独立站，请把网址列入摘要。请让我确认摘要，随后用技能的提交工具发到独立验收站，并报告返回的受理编号。
 
-复制这段话，并附上本仓库的官方链接。
-
-> 请读取这个 GitHub 版本中的 ProofRivet 企业入驻技能，帮我按企业主营行业和主营业务准备一份合成申请。先询问缺项，再给我确认完整摘要。得到我明确同意后，运行技能附带的固定地址提交工具，并告诉我接口实际返回的受理编号。
-
-支持 Agent Skills 的客户端可读取 [SKILL.md](SKILL.md) 和引用的文件。需要导入时，可从 Releases 下载本版本的技能 ZIP。提交工具使用 Python 3 标准库，调用方式见 [提交说明](references/application.md#提交和回执)。
-
-收到申请后，AI 会提供服务器返回的受理编号。工作人员核对入驻资料后会处理后续邀请。
-
-## 技能文件
-
-- [SKILL.md](SKILL.md) 描述准备、确认和提交顺序。
-- [申请字段](references/application.md) 定义结构化申请和回执格式。
-- [提交工具](scripts/submit.py) 使用标准库将已确认的 JSON 发往 ProofRivet。
+从 [SKILL.md](SKILL.md) 开始，按 [申请字段与回执](references/application.md) 核对表单并运行 [提交工具](scripts/submit.py)。工具使用 Python 3 标准库，提交地址固定为独立验收站 `https://passengers-bridge-hosts-relate.trycloudflare.com/api/ai/factory-applications`。
